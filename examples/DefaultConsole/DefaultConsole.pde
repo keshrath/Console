@@ -5,7 +5,7 @@ Console console;
 boolean showConsole;
 
 void setup() {
-  size(400, 400);
+  size(500, 400);
 
   smooth();
   frameRate(1);

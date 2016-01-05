@@ -4,9 +4,15 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 
-import org.slf4j.Logger;
+import org.apache.log4j.Appender;
+import org.apache.log4j.ConsoleAppender;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PatternLayout;
+import org.apache.log4j.WriterAppender;
 import org.slf4j.LoggerFactory;
 
 import processing.core.PApplet;
@@ -49,18 +55,18 @@ public class Console {
     /**
      * Default preferred text size.
      */
-    public static final float DEFAULT_PREFERRED_TEXT_SIZE = 12.5f;
-    
+    public static final float DEFAULT_PREFERRED_TEXT_SIZE = 14f;
+
     /**
      * Default minimal text size.
      */
-    public static final float DEFAULT_MIN_TEXT_SIZE = 10f;
-    
+    public static final float DEFAULT_MIN_TEXT_SIZE = 12.5f;
+
     /**
      * Default line space.
      */
     public static final float DEFAULT_LINE_SPACE = 2f;
-    
+
     /**
      * Default text padding.
      */
@@ -70,24 +76,31 @@ public class Console {
      * Default console stroke color.
      */
     public static final int DEFAULT_STROKE_COLOR = 200;
-    
+
     /**
      * Default console background color.
      */
     public static final int DEFAULT_BACKGROUND_COLOR = 0;
-    
+
     /**
      * Default text color.
      */
     public static final int DEFAULT_TEXT_COLOR = 200;
 
-    private static final Logger logger = LoggerFactory.getLogger(Console.class);
+    /**
+     * Logger Settings
+     */
+    private static final String PATTERN = "%5p (%c) - %m%n";
+    private static final String DEFAULT_APPENDER = "DefaultConsoleAppender";
+
+    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Console.class);
 
     private PApplet applet;
 
     private PrintStream originalSystemOut;
     private ByteArrayOutputStream byteStream;
     private PrintStream printStream;
+    private WriterAppender appender;
 
     private boolean started;
 
@@ -120,6 +133,17 @@ public class Console {
 	originalSystemOut = System.out;
 	started = false;
 	input = "";
+
+	/*
+	 * Logger configuration
+	 */
+	if (!Logger.getRootLogger().getAllAppenders().hasMoreElements()) {
+	    Logger.getRootLogger().setLevel(Level.DEBUG);
+
+	    ConsoleAppender appender = new ConsoleAppender(new PatternLayout(PATTERN));
+	    appender.setName(DEFAULT_APPENDER);
+	    Logger.getRootLogger().addAppender(appender);
+	}
     }
 
     /**
@@ -138,6 +162,9 @@ public class Console {
 	    System.setOut(printStream);
 	    System.setErr(printStream);
 
+	    appender = new WriterAppender(new PatternLayout(PATTERN), printStream);
+	    Logger.getRootLogger().addAppender(appender);
+
 	    started = true;
 	    input = "";
 
@@ -147,11 +174,35 @@ public class Console {
     }
 
     /**
+     * Checks if more than one ConsoleAppender is added to the Logger. If so,
+     * the default ConsoleAppender will be removed.
+     */
+    public void checkDuplicateAppender() {
+	List<ConsoleAppender> consoleAppenders = new ArrayList<ConsoleAppender>();
+	Enumeration<?> e = Logger.getRootLogger().getAllAppenders();
+
+	while (e.hasMoreElements()) {
+	    Appender appender = (Appender) e.nextElement();
+	    if (appender instanceof ConsoleAppender) {
+		consoleAppenders.add((ConsoleAppender) appender);
+	    }
+	}
+
+	if (consoleAppenders.size() >= 2) {
+	    logger.info("Multiple ConsoleAppenders! Default ConsoleAppender will be removed.");
+
+	    Logger.getRootLogger().removeAppender(DEFAULT_APPENDER);
+	}
+    }
+
+    /**
      * Stops the console. The standard output and error stream will be set back
      * to the original system output.
      */
     public void stop() {
 	logger.info("Console is stopping...");
+
+	Logger.getRootLogger().removeAppender(appender);
 
 	System.setOut(originalSystemOut);
 	System.setErr(originalSystemOut);
