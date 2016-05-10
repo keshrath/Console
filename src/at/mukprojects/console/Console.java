@@ -3,7 +3,9 @@ package at.mukprojects.console;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
 
@@ -50,7 +52,7 @@ public class Console {
     /**
      * Default font of the console.
      */
-    private static final String DEFAULT_FONT = "font.vlw";
+    private static final String DEFAULT_FONT = "font.ttf";
 
     /**
      * Default preferred text size.
@@ -107,6 +109,13 @@ public class Console {
     private PFont consoleFont;
 
     private String input;
+    private List<String> renderList;
+
+    private boolean timestamp;
+    private boolean cutMove;
+    private boolean autoPrint;
+
+    private SimpleDateFormat timestampFormat;
 
     /**
      * Constructs a new Console object.
@@ -115,7 +124,7 @@ public class Console {
      *            The processing sketch.
      */
     public Console(PApplet applet) {
-	this(applet, applet.loadFont(DEFAULT_FONT));
+	this(applet, applet.createFont(DEFAULT_FONT, DEFAULT_MIN_TEXT_SIZE));
     }
 
     /**
@@ -130,6 +139,7 @@ public class Console {
 	this.applet = applet;
 	this.consoleFont = font;
 
+	timestampFormat = new SimpleDateFormat("MM/dd - HH:mm:ss");
 	originalSystemOut = System.out;
 	started = false;
 	input = "";
@@ -144,6 +154,40 @@ public class Console {
 	    appender.setName(DEFAULT_APPENDER);
 	    Logger.getRootLogger().addAppender(appender);
 	}
+    }
+
+    /**
+     * If timestamp is set to true, the console will add a timestamp to every
+     * log entry.
+     * 
+     * @param timestamp
+     *            The timestamp flag.
+     */
+    public void setTimestamp(boolean timestamp) {
+	this.timestamp = timestamp;
+    }
+
+    /**
+     * If this flag is set to true, the console will cut log entries which
+     * include the String "__MOVE__". This String gets printed everytime the the
+     * Processing window is moved.
+     * 
+     * @param cutMove
+     *            The flag.
+     */
+    public void setCutMove(boolean cutMove) {
+	this.cutMove = cutMove;
+    }
+
+    /**
+     * If this flag is set to true, the Console will also be printed to the
+     * default system out.
+     * 
+     * @param autoPrint
+     *            The flag.
+     */
+    public void setAutoPrint(boolean autoPrint) {
+	this.autoPrint = autoPrint;
     }
 
     /**
@@ -167,6 +211,7 @@ public class Console {
 
 	    started = true;
 	    input = "";
+	    renderList = new ArrayList<>();
 
 	    logger.info("Console has started.");
 	    logger.info("The standard output and error stream is redirected to the console.");
@@ -351,13 +396,31 @@ public class Console {
 
     private void render(float x, float y, float width, float height, float preferredTextSize, float minTextSize,
 	    float lineSpace, float padding, int strokeColor, int consoleColor, int textColor) {
-	List<String> renderList = new ArrayList<>();
-
+	ArrayList<String> preRenderList = new ArrayList<String>();
 	String[] textsSplit = PApplet.split(byteStream.toString(), "\n");
 
 	for (int i = 0; i < textsSplit.length; i++) {
 	    if (!textsSplit[i].isEmpty()) {
-		renderList.add(textsSplit[i]);
+		preRenderList.add(textsSplit[i]);
+	    }
+	}
+
+	for (int i = renderList.size(); i < preRenderList.size(); i++) {
+	    String logString = null;
+
+	    if (cutMove) {
+		if (!preRenderList.get(i).contains("__MOVE__")) {
+		    logString = preRenderList.get(i);
+		}
+	    } else {
+		logString = preRenderList.get(i);
+	    }
+
+	    if (logString != null) {
+		if (timestamp) {
+		    logString = "[" + timestampFormat.format(new Date()) + "] " + logString;
+		}
+		renderList.add(logString);
 	    }
 	}
 
