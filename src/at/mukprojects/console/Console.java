@@ -389,6 +389,9 @@ public class Console {
 	if (started) {
 	    render(x, y, width, height, preferredTextSize, minTextSize, lineSpace, padding, strokeColor, consoleColor,
 		    textColor);
+	    if(autoPrint) {
+		print();
+	    }
 	} else {
 	    logger.info("Console isn't running.");
 	}
