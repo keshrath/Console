@@ -141,8 +141,12 @@ public class Console {
 
 	timestampFormat = new SimpleDateFormat("MM/dd - HH:mm:ss");
 	originalSystemOut = System.out;
+
 	started = false;
-	input = "";
+
+	timestamp = false;
+	cutMove = false;
+	autoPrint = false;
 
 	/*
 	 * Logger configuration
@@ -210,6 +214,7 @@ public class Console {
 	    Logger.getRootLogger().addAppender(appender);
 
 	    started = true;
+
 	    input = "";
 	    renderList = new ArrayList<>();
 
@@ -389,7 +394,7 @@ public class Console {
 	if (started) {
 	    render(x, y, width, height, preferredTextSize, minTextSize, lineSpace, padding, strokeColor, consoleColor,
 		    textColor);
-	    if(autoPrint) {
+	    if (autoPrint) {
 		print();
 	    }
 	} else {
@@ -444,18 +449,18 @@ public class Console {
 	float lineHeight = calculateLineHeight(size, lineSpace);
 	int startIndex = calculateStartIndex(renderList, size, (width - x) - (2 * padding), (y + lineSpace + padding),
 		lineHeight, height);
-	renderList = renderList.subList(startIndex, renderList.size());
+	List<String> subRenderList = renderList.subList(startIndex, renderList.size());
 
 	int additionalLines = 0;
-	for (int i = 0; i < renderList.size(); i++) {
-	    int linesTaken = calculateLines(renderList.get(i), size, (width - x) - (2 * padding));
+	for (int i = 0; i < subRenderList.size(); i++) {
+	    int linesTaken = calculateLines(subRenderList.get(i), size, (width - x) - (2 * padding));
 	    float yPos = (y + lineSpace + padding) + (i * lineHeight) + (additionalLines * lineHeight);
 
 	    if (linesTaken > 1) {
 		additionalLines += linesTaken - 1;
 	    }
 
-	    applet.text(renderList.get(i), x + padding, yPos, width - padding, yPos + (linesTaken * lineHeight));
+	    applet.text(subRenderList.get(i), x + padding, yPos, width - padding, yPos + (linesTaken * lineHeight));
 	}
 
 	applet.popMatrix();
