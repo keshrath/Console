@@ -1,3 +1,20 @@
+/**
+ * This code is copyright (c) Mathias Markl 2015
+ *
+ * This program is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ * 
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package at.mukprojects.console;
 
 import java.io.ByteArrayOutputStream;
@@ -26,21 +43,6 @@ import processing.core.PFont;
  * well as drawing it to the screen. The console can be started and stopped at
  * any time. For drawing there are multiple different options to render the
  * console.
- *
- * This code is copyright (c) Mathias Markl 2015
- *
- * This program is free software: you can redistribute it and/or modify it under
- * the terms of the GNU General Public License as published by the Free Software
- * Foundation, either version 2 of the License, or (at your option) any later
- * version.
- * 
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
- * details.
- * 
- * You should have received a copy of the GNU General Public License along with
- * this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * @example DefaultConsole.pde
  * @example CustomConsole.pde
@@ -409,27 +411,23 @@ public class Console {
 
 	for (int i = 0; i < textsSplit.length; i++) {
 	    if (!textsSplit[i].isEmpty()) {
-		preRenderList.add(textsSplit[i]);
+		if (cutMove) {
+		    if (!textsSplit[i].contains("__MOVE__")) {
+			preRenderList.add(textsSplit[i]);
+		    }
+		} else {
+		    preRenderList.add(textsSplit[i]);
+		}
 	    }
 	}
 
 	for (int i = renderList.size(); i < preRenderList.size(); i++) {
-	    String logString = null;
+	    String logString = preRenderList.get(i);
 
-	    if (cutMove) {
-		if (!preRenderList.get(i).contains("__MOVE__")) {
-		    logString = preRenderList.get(i);
-		}
-	    } else {
-		logString = preRenderList.get(i);
+	    if (timestamp) {
+		logString = "[" + timestampFormat.format(new Date()) + "] " + logString;
 	    }
-
-	    if (logString != null) {
-		if (timestamp) {
-		    logString = "[" + timestampFormat.format(new Date()) + "] " + logString;
-		}
-		renderList.add(logString);
-	    }
+	    renderList.add(logString);
 	}
 
 	float size = calculateTextSize(renderList, (width - x) - (2 * padding), preferredTextSize, minTextSize);
