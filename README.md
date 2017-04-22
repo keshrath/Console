@@ -7,6 +7,7 @@ The console redirects the standard output and error stream. So by using the `pri
 ## Example
 
 ```java
+import at.mukprojects.console.*;
 Console console;
 
 void setup()
